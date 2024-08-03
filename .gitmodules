@@ -4,3 +4,6 @@
 [submodule "quarkus-kafka-proposta"]
 	path = quarkus-kafka-proposta
 	url = git@github.com:marcelocamacho/quarkus-kafka-proposta.git
+[submodule "quarkus-kafka-cotacao"]
+	path = quarkus-kafka-cotacao
+	url = git@github.com:marcelocamacho/quarkus-kafka-cotacao.git
