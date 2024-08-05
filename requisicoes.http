@@ -1,0 +1,50 @@
+@keyCloakUrl=http://localhost:7080/realms/quarkus/protocol/openid-connect/token
+@baseUrl=http://localhost:8095
+
+# @name joaoAuth
+POST {{keyCloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic backend-service:secret
+
+username=joao&password=1234&grant_type=password
+
+###
+
+# @name joseAuth
+POST {{keyCloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic backend-service:secret
+
+username=jose&password=1234&grant_type=password
+
+###
+
+# @name chinaAuth
+POST {{keyCloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic backend-service:secret
+
+username=china&password=1234&grant_type=password
+
+###
+@userToken={{joaoAuth.response.body.$.access_token}}
+@proposalCustomerToken={{chinaAuth.response.body.$.access_token}}
+
+# @name proposalResp
+POST {{baseUrl}}/api/trade
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJaXzg2UlhKV0ptMmlkVW5rMUg4WkVXQU1zNm4tZ3c5ZTFoVzk2X25OOVFrIn0.eyJleHAiOjE3MjI4MjIxMzcsImlhdCI6MTcyMjgyMTgzNywianRpIjoiYzUzNTQwZTctOTU1NS00NmEzLThlMWMtMjA5YzRkOTlmZTE1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo3MDgwL3JlYWxtcy9xdWFya3VzIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjNmNjIyMjI0LTMxM2MtNDgyNy05MTM1LWRhYTJlZDg1ZTlmNyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImJhY2tlbmQtc2VydmljZSIsInNlc3Npb25fc3RhdGUiOiJiNzBkYzAxOS00NTk0LTRjM2MtODU1Zi04YTZjMGQ4M2IxOWEiLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsicHJvcG9zYWwtY3VzdG9tZXIiLCJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtcXVhcmt1cyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYjcwZGMwMTktNDU5NC00YzNjLTg1NWYtOGE2YzBkODNiMTlhIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiY2hpbmEgbWluZXIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJjaGluYSIsImdpdmVuX25hbWUiOiJjaGluYSIsImZhbWlseV9uYW1lIjoibWluZXIifQ.GgBFLmbBWPLJhCDLG2uX0coYPHu3ojTynKGOy_HUPlRR-vT7NkTSyQtL9S3ujhUCNNombsYXL7-YWIEykUgvFftn3GjWPzvGtYGwYFiQQ94QlXwYhSda1K5b6nwHHAS5NpGiMcIjXxt1n9hO3ZjviDUkMq-3kanU4VoZzbjsIA_fhPwYWRaAML3CIYZlJhElYoYHBfGBPBNB6wp_jny7O884EzbPXdCdb_rU7CFhIshXYDRORq2tTjJC3uEf59VbJhKTuGPXMVHCBx7Z9AUUgEOx6UIQrTJO1-V1fDZp8WgD-bf029CNrojSUCdM2KQZYfYAmXfMfwxF24gXaQZTXQ
+
+{
+    "customer": "China Miner",
+    "priceTonne": 125.25,
+    "tonnes": 80,
+    "country": "China",
+    "proposalValidityDays": 3
+}
+
+@proposalId = {{proposalResp.response.body.$.proposalId}}
+###
+GET {{baseUrl}}/api/proposal/{{proposalId}}
+
+###
