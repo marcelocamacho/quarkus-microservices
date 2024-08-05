@@ -10,3 +10,6 @@
 [submodule "quarkus-kafka-report"]
 	path = quarkus-kafka-report
 	url = git@github.com:marcelocamacho/quarkus-kafka-report.git
+[submodule "quarkus-gateway-bff"]
+	path = quarkus-gateway-bff
+	url = git@github.com:marcelocamacho/quarkus-gateway-bff.git
