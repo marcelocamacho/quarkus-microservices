@@ -1,6 +1,7 @@
 @keyCloakUrl=http://localhost:7080/realms/quarkus/protocol/openid-connect/token
 @baseUrl=http://localhost:8095
 
+# Cria um usuário com a role user
 # @name joaoAuth
 POST {{keyCloakUrl}}
 Content-Type: application/x-www-form-urlencoded
@@ -10,6 +11,7 @@ username=joao&password=1234&grant_type=password
 
 ###
 
+# Cria um usuário com role manager
 # @name joseAuth
 POST {{keyCloakUrl}}
 Content-Type: application/x-www-form-urlencoded
@@ -19,6 +21,7 @@ username=jose&password=1234&grant_type=password
 
 ###
 
+# Cria um usuário com role propose-customer
 # @name chinaAuth
 POST {{keyCloakUrl}}
 Content-Type: application/x-www-form-urlencoded
@@ -26,14 +29,32 @@ Authorization: Basic backend-service:secret
 
 username=china&password=1234&grant_type=password
 
-###
+### Cria variáveis que armazenam tokens 
 @userToken={{joaoAuth.response.body.$.access_token}}
+@managerToken={{joseAuth.response.body.$.access_token}}
 @proposalCustomerToken={{chinaAuth.response.body.$.access_token}}
+###
 
+# Cria uma proposta diretamente no microserviço de proposta para testar o alvo e testar a autenticação criada anteriormente (propose-customer)
 # @name proposalResp
+POST http://localhost:8091/api/proposal
+Content-Type: application/json
+Authorization: Bearer {{proposalCustomerToken}}
+
+{
+    "customer": "China Miner",
+    "priceTonne": 125.25,
+    "tonnes": 80,
+    "country": "China",
+    "proposalValidityDays": 3
+}
+###
+
+# Cria uma proposta utilizando o gateway-bff propagando a autorização e autenticação
+
 POST {{baseUrl}}/api/trade
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJaXzg2UlhKV0ptMmlkVW5rMUg4WkVXQU1zNm4tZ3c5ZTFoVzk2X25OOVFrIn0.eyJleHAiOjE3MjI4MjIxMzcsImlhdCI6MTcyMjgyMTgzNywianRpIjoiYzUzNTQwZTctOTU1NS00NmEzLThlMWMtMjA5YzRkOTlmZTE1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo3MDgwL3JlYWxtcy9xdWFya3VzIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjNmNjIyMjI0LTMxM2MtNDgyNy05MTM1LWRhYTJlZDg1ZTlmNyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImJhY2tlbmQtc2VydmljZSIsInNlc3Npb25fc3RhdGUiOiJiNzBkYzAxOS00NTk0LTRjM2MtODU1Zi04YTZjMGQ4M2IxOWEiLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsicHJvcG9zYWwtY3VzdG9tZXIiLCJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtcXVhcmt1cyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYjcwZGMwMTktNDU5NC00YzNjLTg1NWYtOGE2YzBkODNiMTlhIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiY2hpbmEgbWluZXIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJjaGluYSIsImdpdmVuX25hbWUiOiJjaGluYSIsImZhbWlseV9uYW1lIjoibWluZXIifQ.GgBFLmbBWPLJhCDLG2uX0coYPHu3ojTynKGOy_HUPlRR-vT7NkTSyQtL9S3ujhUCNNombsYXL7-YWIEykUgvFftn3GjWPzvGtYGwYFiQQ94QlXwYhSda1K5b6nwHHAS5NpGiMcIjXxt1n9hO3ZjviDUkMq-3kanU4VoZzbjsIA_fhPwYWRaAML3CIYZlJhElYoYHBfGBPBNB6wp_jny7O884EzbPXdCdb_rU7CFhIshXYDRORq2tTjJC3uEf59VbJhKTuGPXMVHCBx7Z9AUUgEOx6UIQrTJO1-V1fDZp8WgD-bf029CNrojSUCdM2KQZYfYAmXfMfwxF24gXaQZTXQ
+Authorization: Bearer {{proposalCustomerToken}}
 
 {
     "customer": "China Miner",
@@ -43,8 +64,28 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJaXzg2Ul
     "proposalValidityDays": 3
 }
 
-@proposalId = {{proposalResp.response.body.$.proposalId}}
 ###
-GET {{baseUrl}}/api/proposal/{{proposalId}}
+@proposalId = 2
+GET http://localhost:8091/api/proposal/{{proposalId}}
+Authorization: Bearer {{userToken}}
 
 ###
+# Utilizando a proposta criada anteriormente, faz a consulta dos detalhes utilizando o gateway
+GET {{baseUrl}}/api/trade/{{proposalId}}
+Authorization: Bearer {{userToken}}
+###
+
+# Utilizando a proposta criada anteriormente, faz a consulta dos detalhes utilizando o gateway com a autenticação de um manager
+DELETE {{baseUrl}}/api/trade/remove/{{proposalId}}
+Authorization: Bearer {{managerToken}}
+###
+
+GET http://localhost:8081/api/opportunity/report
+Authorization: Bearer {{userToken}}
+###
+GET {{baseUrl}}/api/opportunity/data
+Authorization: Bearer {{userToken}}
+
+###
+GET {{baseUrl}}/api/opportunity/report
+Authorization: Bearer {{userToken}}
